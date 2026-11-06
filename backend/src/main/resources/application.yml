@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: facturacion-hexagonal
+
+  # ---------- MySQL: modulo transaccional (facturas + detalle_factura) ----------
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/facturacion?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
+    username: ${MYSQL_USER:facturacion}
+    password: ${MYSQL_PASSWORD:facturacion123}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+
+  # ---------- MongoDB: catalogo de productos ----------
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USER:root}:${MONGO_PASSWORD:root123}@${MONGO_HOST:localhost}:${MONGO_PORT:27018}/facturacion?authSource=admin
+      auto-index-creation: true
+
+  # ---------- Apache Cassandra: personas ----------
+  cassandra:
+    contact-points: ${CASSANDRA_HOST:localhost}:${CASSANDRA_PORT:9042}
+    local-datacenter: datacenter1
+    keyspace-name: facturacion
+    schema-action: create_if_not_exists
+    connection:
+      connect-timeout: 15s
+      init-query-timeout: 15s
+    request:
+      timeout: 10s
+
+# ---------- Apache CouchDB (WSL): backup analitico / ML ----------
+couchdb:
+  url: http://${COUCHDB_HOST:localhost}:${COUCHDB_PORT:5984}
+  username: ${COUCHDB_USER:admin}
+  password: ${COUCHDB_PASSWORD:admin123}
+  database: facturas_backup
+  fallback-dir: backup-pendiente
+
+facturacion:
+  # ---------- Impuestos ----------
+  iva: 0.19          # tarifa general de IVA en Colombia
+
+  # ---------- Concurrencia (@Async) ----------
+  async:
+    core-pool-size: 3
+    max-pool-size: 10
+    queue-capacity: 0
+    thread-name-prefix: proceso-async-
+  demo-concurrencia:
+    enabled: true
+    iteraciones: 5
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%-16.16thread] %-40.40logger{39} : %msg%n"
+  level:
+    com.facturacion: INFO
+    com.datastax.oss.driver: WARN
+    org.mongodb.driver: WARN
