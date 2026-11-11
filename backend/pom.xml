@@ -56,7 +56,7 @@
             <artifactId>spring-boot-starter-data-cassandra</artifactId>
         </dependency>
 
-        <!-- Adaptador de salida: Apache CouchDB (backup analitico) se consume por HTTP con RestClient -->
+        <!-- Adaptador de salida: Apache Druid (tabla de hechos) se consume por HTTP con RestClient -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

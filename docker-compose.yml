@@ -1,6 +1,6 @@
 # Infraestructura local del sistema de facturacion.
-#   docker compose up -d                          -> MySQL + MongoDB + Cassandra (+ carga inicial)
-#   docker compose --profile backup-docker up -d  -> ademas CouchDB en Docker (solo si NO lo instalaste en WSL)
+#   docker compose up -d   -> MySQL + MongoDB + Cassandra (+ carga inicial)
+# El motor analitico Apache Druid corre aparte, en Ubuntu WSL2: infra/wsl/start-druid.sh
 name: facturacion
 
 services:
@@ -78,21 +78,7 @@ services:
     entrypoint: ["cqlsh", "cassandra", "9042", "-f", "/init.cql"]
     restart: "no"
 
-  # ---------------- Apache CouchDB (alternativa en Docker al motor de backup en WSL) ----------------
-  couchdb:
-    image: couchdb:3.4
-    container_name: facturacion-couchdb
-    profiles: ["backup-docker"]
-    environment:
-      COUCHDB_USER: admin
-      COUCHDB_PASSWORD: admin123
-    ports:
-      - "5984:5984"
-    volumes:
-      - couchdb_data:/opt/couchdb/data
-
 volumes:
   mysql_data:
   mongo_data:
   cassandra_data:
-  couchdb_data:

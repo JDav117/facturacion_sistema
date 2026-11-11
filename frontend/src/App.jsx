@@ -8,7 +8,7 @@ const TABS = [
   { id: 'billing', label: 'Facturar', engine: 'MySQL' },
   { id: 'persons', label: 'Personas', engine: 'Cassandra' },
   { id: 'products', label: 'Productos', engine: 'MongoDB' },
-  { id: 'history', label: 'Historial y backup', engine: 'MySQL + CouchDB' }
+  { id: 'history', label: 'Historial y backup', engine: 'MySQL + Druid' }
 ];
 
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
           <span className="logo-mark">⬡</span>
           <div>
             <div className="logo-title">Facturación Hexagonal</div>
-            <div className="logo-sub">Spring Boot · MySQL · MongoDB · Cassandra · CouchDB</div>
+            <div className="logo-sub">Spring Boot · MySQL · MongoDB · Cassandra · Druid</div>
           </div>
         </div>
         <nav className="tabs">

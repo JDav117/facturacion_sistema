@@ -46,7 +46,8 @@ export const api = {
   getInvoices: () => request('/invoices'),
   getInvoice: (id) => request(`/invoices/${id}`),
 
-  // Backup analítico (CouchDB en WSL)
+  // Backup analítico: tabla de hechos en Apache Druid (WSL2)
   getBackups: () => request('/backups'),
-  getBackupAnalytics: () => request('/backups/analytics')
+  getBackupAnalytics: () => request('/backups/analytics'),
+  regenerateFacts: () => request('/backups/regenerate', { method: 'POST' })
 };

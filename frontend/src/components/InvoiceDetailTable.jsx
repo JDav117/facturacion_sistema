@@ -65,7 +65,7 @@ export default function InvoiceDetailTable({
         {emitting ? 'Emitiendo…' : 'Emitir Factura'}
       </button>
       <p className="muted small center">
-        Se registra en MySQL y se respalda de forma asíncrona en CouchDB (WSL).
+        Se registra en MySQL y sus hechos se cargan de forma asíncrona en Apache Druid (WSL2).
       </p>
     </div>
   );

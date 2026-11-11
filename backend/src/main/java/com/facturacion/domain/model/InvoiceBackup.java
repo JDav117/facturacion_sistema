@@ -6,8 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Estructura analitica que se replica al motor de backup / Machine Learning.
- * Solo contiene IDs y montos: invoice_id, client_id, product_ids, quantities, totals y timestamp.
+ * Vista resumida, por factura, de lo que hay en el motor de backup:
+ * invoice_id, client_id, product_ids, quantities, totals y timestamp.
+ * Se reconstruye agrupando los hechos de venta de esa factura.
  */
 public record InvoiceBackup(
         Long invoiceId,
@@ -20,18 +21,4 @@ public record InvoiceBackup(
         BigDecimal invoiceTotal,
         LocalDateTime timestamp,
         Instant backedUpAt) {
-
-    public static InvoiceBackup from(Invoice invoice, Instant backedUpAt) {
-        return new InvoiceBackup(
-                invoice.getId(),
-                invoice.getClientId(),
-                invoice.getDetails().stream().map(InvoiceDetail::productId).toList(),
-                invoice.getDetails().stream().map(InvoiceDetail::quantity).toList(),
-                invoice.getDetails().stream().map(InvoiceDetail::subtotal).toList(),
-                invoice.getSubtotal(),
-                invoice.getTaxAmount(),
-                invoice.getTotal(),
-                invoice.getIssuedAt(),
-                backedUpAt);
-    }
 }

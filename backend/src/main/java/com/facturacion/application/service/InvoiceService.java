@@ -12,6 +12,8 @@ import com.facturacion.domain.model.Invoice;
 import com.facturacion.domain.model.InvoiceDetail;
 import com.facturacion.domain.model.Person;
 import com.facturacion.domain.model.Product;
+import com.facturacion.domain.model.SalesFact;
+import com.facturacion.domain.service.SalesFactFactory;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
  * 2. Aplica las reglas de negocio (cliente valido, disponibilidad, precio tomado del catalogo, IVA).
  * 3. Persiste la factura en MySQL (transaccion).
  * 4. Descuenta stock en el catalogo.
- * 5. Dispara el backup analitico asincrono (CouchDB) sin bloquear la respuesta.
+ * 5. Genera los hechos de venta y los carga de forma asincrona en Apache Druid sin bloquear la respuesta.
  */
 public class InvoiceService implements CreateInvoiceUseCase, GetInvoicesUseCase {
 
@@ -109,14 +111,18 @@ public class InvoiceService implements CreateInvoiceUseCase, GetInvoicesUseCase 
             }
         });
 
-        triggerBackup(saved);
+        triggerBackup(saved, client, products);
         return saved;
     }
 
-    /** El backup nunca debe tumbar la emision de la factura: corre en otro hilo y se aisla cualquier fallo. */
-    private void triggerBackup(Invoice saved) {
+    /**
+     * Genera los hechos de la factura (con el cliente y productos ya consultados) y los envia al motor
+     * analitico en otro hilo. El backup nunca debe tumbar la emision de la factura: se aisla cualquier fallo.
+     */
+    private void triggerBackup(Invoice saved, Person client, Map<String, Product> products) {
         try {
-            backupRepository.backup(saved).whenComplete((ok, error) -> {
+            List<SalesFact> facts = SalesFactFactory.fromInvoice(saved, client, products);
+            backupRepository.backup(facts).whenComplete((ok, error) -> {
                 if (error != null) {
                     LOG.log(System.Logger.Level.ERROR, "Fallo el backup de la factura " + saved.number(), error);
                 }

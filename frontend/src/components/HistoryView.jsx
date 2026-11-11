@@ -27,6 +27,20 @@ export default function HistoryView() {
   const [error, setError] = useState(null);
   const [backupError, setBackupError] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [etl, setEtl] = useState(null); // { running, message, error }
+
+  async function regenerate() {
+    setEtl({ running: true });
+    try {
+      const r = await api.regenerateFacts();
+      setEtl({
+        message: `ETL enviado: ${r.invoices} facturas → ${r.facts} hechos (tarea ${r.loadId}). ` +
+          'Druid tarda unos segundos en procesarla; luego pulse Actualizar.'
+      });
+    } catch (e) {
+      setEtl({ error: e.message });
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -49,17 +63,6 @@ export default function HistoryView() {
 
   const backedUpIds = useMemo(() => new Set(backups.map((b) => b.invoiceId)), [backups]);
 
-  // Los backups solo guardan IDs: se resuelven nombres con los datos transaccionales.
-  const productNames = useMemo(() => {
-    const map = {};
-    invoices.forEach((inv) => inv.details.forEach((d) => { map[d.productId] = d.productName; }));
-    return map;
-  }, [invoices]);
-  const clientNames = useMemo(
-    () => Object.fromEntries(invoices.map((inv) => [inv.clientId, inv.clientName])),
-    [invoices]
-  );
-
   if (selected) {
     return <InvoiceReceipt invoice={selected} onClose={() => setSelected(null)} closeLabel="← Volver al historial" />;
   }
@@ -70,7 +73,7 @@ export default function HistoryView() {
     <div className="history">
       <div className="stats">
         <div className="stat"><span className="muted small">Facturas (MySQL)</span><strong>{invoices.length}</strong></div>
-        <div className="stat"><span className="muted small">Respaldadas (CouchDB)</span><strong>{backupError ? '—' : backups.length}</strong></div>
+        <div className="stat"><span className="muted small">En tabla de hechos (Druid)</span><strong>{backupError ? '—' : backups.length}</strong></div>
         <div className="stat"><span className="muted small">Ventas totales</span><strong>{money(totalSales)}</strong></div>
         <button className="btn" onClick={load}>Actualizar</button>
       </div>
@@ -99,7 +102,7 @@ export default function HistoryView() {
                     {backupError
                       ? <span className="badge muted-badge">sin conexión</span>
                       : backedUpIds.has(inv.id)
-                        ? <span className="badge ok-badge">✓ replicada</span>
+                        ? <span className="badge ok-badge">✓ en Druid</span>
                         : <span className="badge warn-badge">pendiente</span>}
                   </td>
                   <td><button className="btn ghost small" onClick={() => setSelected(inv)}>Ver</button></td>
@@ -115,18 +118,28 @@ export default function HistoryView() {
 
       <div className="card">
         <div className="card-header">
-          <h2>Analítica del backup (vistas MapReduce)</h2>
-          <span className="tag">Apache CouchDB · WSL</span>
+          <h2>Analítica de la tabla de hechos (Druid SQL)</h2>
+          <div className="row-actions">
+            <span className="tag">Apache Druid · WSL2</span>
+            <button className="btn small" disabled={etl?.running || Boolean(backupError)} onClick={regenerate}
+              title="Caso de uso generar hechos: MySQL + Cassandra + MongoDB → transformación y validación → Druid">
+              {etl?.running ? 'Generando…' : 'Generar hechos (ETL)'}
+            </button>
+          </div>
         </div>
+        {etl?.message && <div className="alert ok">{etl.message}</div>}
+        {etl?.error && <div className="alert error">{etl.error}</div>}
         {backupError ? (
-          <div className="alert warn">{backupError}. Inicie CouchDB en WSL: <code>bash infra/wsl/start-couchdb.sh</code></div>
+          <div className="alert warn">{backupError}. Inicie Druid en WSL: <code>bash infra/wsl/start-druid.sh</code></div>
         ) : analytics && (
           <div className="metrics">
             <MetricList title="Unidades vendidas por producto" metrics={analytics.unitsByProduct}
-              label={(k) => productNames[k] ?? k} format={(v) => Number(v)} />
-            <MetricList title="Ventas por cliente" metrics={analytics.salesByClient}
-              label={(k) => clientNames[k] ?? k} format={money} />
+              label={(k) => k} format={(v) => Number(v)} />
+            <MetricList title="Ventas por cliente (con IVA)" metrics={analytics.salesByClient}
+              label={(k) => k} format={money} />
             <MetricList title="Ventas por día" metrics={analytics.salesByDay}
+              label={(k) => k} format={money} />
+            <MetricList title="Margen bruto por proveedor" metrics={analytics.marginBySupplier}
               label={(k) => k} format={money} />
           </div>
         )}

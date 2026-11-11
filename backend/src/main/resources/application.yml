@@ -34,13 +34,13 @@ spring:
     request:
       timeout: 10s
 
-# ---------- Apache CouchDB (WSL): backup analitico / ML ----------
-couchdb:
-  url: http://${COUCHDB_HOST:localhost}:${COUCHDB_PORT:5984}
-  username: ${COUCHDB_USER:admin}
-  password: ${COUCHDB_PASSWORD:admin123}
-  database: facturas_backup
+# ---------- Apache Druid (WSL2): backup analitico / ML (tabla de hechos) ----------
+druid:
+  url: http://${DRUID_HOST:localhost}:${DRUID_PORT:8888}   # router de Druid
+  datasource: hechos_ventas
+  time-zone: America/Bogota
   fallback-dir: backup-pendiente
+  task-timeout: 120s
 
 facturacion:
   # ---------- Impuestos ----------

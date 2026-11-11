@@ -78,7 +78,7 @@ export default function InvoiceReceipt({ invoice, client, onClose, closeLabel = 
 
         <footer className="receipt-footer muted small">
           Registro transaccional: MySQL (facturas #{invoice.id}) · Cliente: Cassandra · Productos: MongoDB ·
-          Respaldo analítico asíncrono: Apache CouchDB (WSL)
+          Hechos analíticos: Apache Druid (WSL2)
         </footer>
       </div>
     </div>

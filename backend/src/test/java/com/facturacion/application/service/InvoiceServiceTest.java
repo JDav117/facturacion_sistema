@@ -15,6 +15,7 @@ import com.facturacion.domain.model.Person;
 import com.facturacion.domain.model.PersonRole;
 import com.facturacion.domain.model.PersonType;
 import com.facturacion.domain.model.Product;
+import com.facturacion.domain.model.SalesFact;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,7 @@ class InvoiceServiceTest {
     private final Map<String, Product> products = new HashMap<>();
     private final Map<String, Person> persons = new HashMap<>();
     private final List<Invoice> savedInvoices = new ArrayList<>();
-    private final List<Invoice> backedUp = new ArrayList<>();
+    private final List<SalesFact> backedUp = new ArrayList<>();
     private InvoiceService service;
 
     @BeforeEach
@@ -74,7 +75,9 @@ class InvoiceServiceTest {
         assertEquals(0, new BigDecimal("321300").compareTo(invoice.getTotal()));
         assertEquals(7, products.get("p1").stock());
         assertEquals(1, products.get("p2").stock());
-        assertEquals(1, backedUp.size(), "se replica al motor de backup");
+        assertEquals(2, backedUp.size(), "se carga un hecho por linea en el motor de backup");
+        BigDecimal factsTotal = backedUp.stream().map(SalesFact::lineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, invoice.getTotal().compareTo(factsTotal), "los hechos cuadran con la factura");
     }
 
     @Test
@@ -153,8 +156,9 @@ class InvoiceServiceTest {
     }
 
     private class FakeBackup implements InvoiceBackupRepositoryPort {
-        public CompletableFuture<Boolean> backup(Invoice invoice) { backedUp.add(invoice); return CompletableFuture.completedFuture(true); }
+        public CompletableFuture<Boolean> backup(List<SalesFact> facts) { backedUp.addAll(facts); return CompletableFuture.completedFuture(true); }
+        public String replaceAll(List<SalesFact> facts) { backedUp.clear(); backedUp.addAll(facts); return "fake"; }
         public List<InvoiceBackup> findAll() { return List.of(); }
-        public BackupAnalytics analytics() { return new BackupAnalytics(List.of(), List.of(), List.of()); }
+        public BackupAnalytics analytics() { return new BackupAnalytics(List.of(), List.of(), List.of(), List.of()); }
     }
 }

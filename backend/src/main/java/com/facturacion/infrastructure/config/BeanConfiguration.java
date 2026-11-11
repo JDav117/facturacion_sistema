@@ -5,6 +5,7 @@ import com.facturacion.application.port.out.InvoiceRepositoryPort;
 import com.facturacion.application.port.out.PersonRepositoryPort;
 import com.facturacion.application.port.out.ProductRepositoryPort;
 import com.facturacion.application.service.BackupService;
+import com.facturacion.application.service.FactGenerationService;
 import com.facturacion.application.service.InvoiceService;
 import com.facturacion.application.service.PersonService;
 import com.facturacion.application.service.ProductService;
@@ -46,6 +47,14 @@ public class BeanConfiguration {
                                          Clock clock,
                                          @Value("${facturacion.iva:0.19}") BigDecimal taxRate) {
         return new InvoiceService(invoiceRepository, productRepository, personRepository, backupRepository, clock, taxRate);
+    }
+
+    @Bean
+    public FactGenerationService factGenerationService(InvoiceRepositoryPort invoiceRepository,
+                                                       PersonRepositoryPort personRepository,
+                                                       ProductRepositoryPort productRepository,
+                                                       InvoiceBackupRepositoryPort backupRepository) {
+        return new FactGenerationService(invoiceRepository, personRepository, productRepository, backupRepository);
     }
 
     @Bean

@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RestClientException.class)
     public ResponseEntity<ErrorResponse> backupEngine(RestClientException e) {
         log.warn("Motor de backup no disponible: {}", e.getMessage());
-        return build(HttpStatus.SERVICE_UNAVAILABLE, "Motor de backup (CouchDB en WSL) no disponible", List.of());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "Motor analitico (Apache Druid en WSL2) no disponible", List.of());
     }
 
     @ExceptionHandler(Exception.class)
